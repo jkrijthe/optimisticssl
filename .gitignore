@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+*.bbl
+*.aux
+*.synctex.gz
+*.log
+*.upa
+*.upb
+*-concordance.tex
