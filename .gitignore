@@ -10,3 +10,4 @@
 *.upa
 *.upb
 *-concordance.tex
+cache/
