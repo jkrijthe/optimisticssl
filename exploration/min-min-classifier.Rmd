@@ -1,0 +1,239 @@
+---
+title: "min-min Least Squares Classifier"
+author: "Jesse H. Krijthe"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+# min-min in the contrastive setting
+While Maximum Contrastive Pessimistic Likelihood estimation (MCPL), considers
+$$ \min_{\mathbf{w}} \max_{\mathbf{y}_\text{u} \in {[0,1]}^U} \left\lVert
+ \mathbf{X}_\text{e} \mathbf{w} - \begin{bmatrix} \mathbf{y} \\ \mathbf{y}_\text{e} \end{bmatrix} \right\rVert
+^2 - \left\lVert
+ \mathbf{X}_\text{e} \mathbf{w}_\text{sup} - \begin{bmatrix} \mathbf{y} \\ \mathbf{y}_\text{e} \end{bmatrix} \right\rVert
+^2 $$
+we can also let go of conservatism by considering the best possible labeling, instead of the worst possible labeling:
+$$ \min_{\mathbf{w}} \min_{\mathbf{y}_\text{u} \in {[0,1]}^U} \left\lVert
+ \mathbf{X}_\text{e} \mathbf{w} - \begin{bmatrix} \mathbf{y} \\ \mathbf{y}_\text{e} \end{bmatrix} \right\rVert
+^2 - \left\lVert
+ \mathbf{X}_\text{e} \mathbf{w}_\text{sup} - \begin{bmatrix} \mathbf{y} \\ \mathbf{y}_\text{e} \end{bmatrix} \right\rVert
+^2 $$
+
+Are these two types the same?
+
+In the following, let $m$ be the numerical label for class 1 and $n$ be the numerical label for class 2.
+
+## Type 1
+Contrastive with responsibilities as variables
+$$
+\begin{align}
+J(\mathbf{w},\mathbf{q}) = & \sum_{i=1}^{L} \mathbf{w}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w} - 2 y_i \mathbf{x}_i^\top \mathbf{w} + y_i^2 + \sum_{j=1}^{U} q_i (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w} - 2 m \mathbf{x}_j^\top \mathbf{w} + m^2) + (1-q_i) (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w}^\top - 2 n \mathbf{x}_j^\top \mathbf{w} + n^2) \\
+& - \sum_{i=1}^{L} \mathbf{w}_\text{sup}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w}_\text{sup} - 2 y_i \mathbf{x}_i^\top \mathbf{w}_\text{sup} + y_i^2 - \sum_{j=1}^{U} q_i (\mathbf{w}_\text{sup}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w}_\text{sup} - 2 m \mathbf{x}_j^\top \mathbf{w}_\text{sup} + m^2) + (1-q_i) (\mathbf{w}_\text{sup}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w}_\text{sup}^\top - 2 n \mathbf{x}_j^\top \mathbf{w}_\text{sup} + n^2)
+\end{align}
+$$
+which gives the following gradient:
+$$\frac{\nabla J}{\nabla \mathbf{w}} = 2 \mathbf{X}^\top \mathbf{X} \mathbf{w} - 2 \mathbf{X}^\top \mathbf{y} + 2 \mathbf{X}_\text{u}^\top \mathbf{X}_\text{u} \mathbf{w} - 2 \mathbf{X}_\text{u} (\mathbf{q} m - \mathbf{q} n +n$$
+$$\begin{align}
+\frac{\nabla J}{\nabla q_i} = & 2 m \mathbf{x}_j^\top \mathbf{w}_\text{sup} - 2 m \mathbf{x}_j^\top \mathbf{w} + 2 n \mathbf{x}_j^\top \mathbf{w} - 2 n \mathbf{x}_j^\top \mathbf{w}_\text{sup} \\
+= & -2 (\mathbf{x}_j^\top \mathbf{w} - \mathbf{x}_j^\top \mathbf{w}_\text{sup}) (m-n)
+\end{align}
+$$
+We now consider the second derivatives:
+$$
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{w}} = 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e}
+$$
+
+$$
+\frac{\nabla J}{\nabla \mathbf{q} \nabla \mathbf{q}} = 0
+$$
+
+$$
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{q}} = -2 (m-n) \mathbf{X}_\text{u}
+$$
+
+which gives the following hessian:
+$$
+H=\begin{bmatrix} 
+2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} & 
+-2 (m-n) \mathbf{X}_\text{u}^\top \\
+-2 (m-n) \mathbf{X}_\text{u} &
+\mathbf{0}
+\end{bmatrix}
+$$
+So for the problem to be convex we would need:
+$$
+2 \mathbf{z}^\top_1 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{z}_1 - 2 (m-n) \mathbf{z}_2^\top \mathbf{X}_\text{u} \mathbf{z}_1 \geq 0
+$$
+For all $\mathbf{z} \in \mathbb{R}^{d+U}$. This seems unlikely.
+
+## Type 2
+Contrastive with labels as variables:
+$$
+\begin{align}
+J(\mathbf{w},\mathbf{u}) = & \sum_{i=1}^{L} ( \mathbf{w}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w} - 2 y_i \mathbf{x}_i^\top \mathbf{w} + y_i^2 ) + \sum_{j=1}^{U} (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w} - 2 u_i \mathbf{x}_j^\top \mathbf{w} + u_i^2 )\\
+& - \sum_{i=1}^{L} (\mathbf{w}_\text{sup}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w}_\text{sup} - 2 y_i \mathbf{x}_i^\top \mathbf{w}_\text{sup} - y_i^2) - \sum_{j=1}^{U} (\mathbf{w}_\text{sup}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w}_\text{sup} - 2 u_i \mathbf{x}_j^\top \mathbf{w}_\text{sup} + u_i^2)
+\end{align}
+$$
+which gives the following gradient:
+$$
+\frac{\nabla J}{\nabla \mathbf{w}} = 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{w} - 2 \mathbf{X}_\text{e}^\top \mathbf{y}_\text{e}
+$$
+where $\mathbf{y}_\text{e}=\begin{bmatrix} \mathbf{y} \\ \mathbf{u} \end{bmatrix}$.
+$$
+\frac{\nabla J}{\nabla \mathbf{u}} = -2 (\mathbf{X}_\text{u} \mathbf{w} - \mathbf{X}_\text{u} \mathbf{w}_\text{sup})
+$$
+Considering the second derivatives we have:
+$$
+\begin{align}
+\frac{\nabla J}{\nabla \mathbf{u} \nabla \mathbf{u}} = & \mathbf{0} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{w}} = & 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{u}} = & -2 \mathbf{X}_\text{u} \\
+\end{align}
+$$
+which gives the Hessian:
+$$
+H=\begin{bmatrix} 
+2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} & 
+-2 \mathbf{X}_\text{u}^\top \\
+-2 \mathbf{X}_\text{u} &
+\mathbf{0}
+\end{bmatrix}
+$$
+So for the problem to be convex we would need:
+$$
+2 \mathbf{z}^\top_1 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{z}_1 - 2 \mathbf{z}_2^\top \mathbf{X}_\text{u} \mathbf{z}_1 \geq 0
+$$
+For all $\mathbf{z} \in \mathbb{R}^{d+U}$. This seems unlikely.
+
+# min-min on the loss
+
+## Type 1
+$$
+J(\mathbf{w},\mathbf{q}) = \sum_{i=1}^{L} \mathbf{w}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w} - 2 y_i \mathbf{x}_i^\top \mathbf{w} + y_i^2 + \sum_{j=1}^{U} q_i (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w} - 2 m \mathbf{x}_j^\top \mathbf{w} + m^2) + (1-q_i) (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w}^\top - 2 n \mathbf{x}_j^\top \mathbf{w} + n^2)
+$$
+Gradient:
+
+$$
+\frac{\nabla J}{\nabla \mathbf{w}} = 2 \mathbf{X}^\top_\text{e} \mathbf{X}_\text{e} \mathbf{w} - 2 \mathbf{X}^\top \mathbf{y}  - 2 \mathbf{X}_\text{u} (\mathbf{q} m - \mathbf{q} n + n )
+$$
+
+$$
+\frac{\nabla J}{\nabla q_i} = m^2 - n^2 - 2 (m-n) \mathbf{x}_j^\top \mathbf{w}
+$$
+Second derivative:
+$$
+\begin{align}
+\frac{\nabla J}{\nabla \mathbf{q} \nabla \mathbf{q}} = & \mathbf{0} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{w}} = & 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{u}} = & -2 (m-n) \mathbf{X}_\text{u} \\
+\end{align}
+$$
+which gives the Hessian:
+$$
+H=\begin{bmatrix} 
+2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} & 
+-2 (m-n)\mathbf{X}_\text{u}^\top \\
+-2 (m-n) \mathbf{X}_\text{u} &
+\mathbf{0}
+\end{bmatrix}
+$$
+So for the problem to be convex we would need:
+$$
+2 \mathbf{z}^\top_1 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{z}_1 - 2 (m-n)  \mathbf{z}_2^\top \mathbf{X}_\text{u} \mathbf{z}_1 \geq 0
+$$  
+For all $\mathbf{z} \in \mathbb{R}^{d+U}$. This seems unlikely.
+
+## Type 2
+$$
+J(\mathbf{w},\mathbf{u}) = \sum_{i=1}^{L} ( \mathbf{w}^\top \mathbf{x}_i \mathbf{x}_i^\top \mathbf{w} - 2 y_i \mathbf{x}_i^\top \mathbf{w} + y_i^2 ) + \sum_{j=1}^{U} (\mathbf{w}^\top \mathbf{x}_j \mathbf{x}_j^\top \mathbf{w} - 2 u_i \mathbf{x}_j^\top \mathbf{w} + u_i^2 )
+$$
+which gives the following gradient:
+$$
+\frac{\nabla J}{\nabla \mathbf{w}} = 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{w} - 2 \mathbf{X}_\text{e}^\top \mathbf{y}_\text{e}
+$$
+where $\mathbf{y}_\text{e}=\begin{bmatrix} \mathbf{y} \\ \mathbf{u} \end{bmatrix}$.
+$$
+\frac{\nabla J}{\nabla \mathbf{u}} = -2 (\mathbf{X}_\text{u} \mathbf{w} - \mathbf{u})
+$$
+Considering the second derivatives we have:
+$$
+\begin{align}
+\frac{\nabla J}{\nabla \mathbf{u} \nabla \mathbf{u}} = & -2 \mathbf{I} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{w}} = & 2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \\
+\frac{\nabla J}{\nabla \mathbf{w} \nabla \mathbf{u}} = & -2 \mathbf{X}_\text{u} \\
+\end{align}
+$$
+which gives the Hessian:
+$$
+H=\begin{bmatrix} 
+2 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} & 
+-2 \mathbf{X}_\text{u}^\top \\
+-2 \mathbf{X}_\text{u} &
+-2 \mathbf{I}
+\end{bmatrix}
+$$
+So for the problem to be convex we would need:
+$$
+2 \mathbf{z}^\top_1 \mathbf{X}_\text{e}^\top \mathbf{X}_\text{e} \mathbf{z}_1 - 2 \mathbf{z}_2^\top \mathbf{X}_\text{u} \mathbf{z}_1 -2 \mathbf{z}_2^\top \mathbf{I} \mathbf{z}_2  \geq 0
+$$
+For all $\mathbf{z} \in \mathbb{R}^{d+U}$. This seems unlikely.
+
+## Non-convexity
+For all four objective functions, it seems unlikely they are convex. Can we show this more formally?
+
+## Solution through coordinate descent
+Alternate between updating $\mathbf{w}$ and $\mathbf{q}$ (or $\mathbf{u}$).
+
+## Example
+```{r echo=FALSE}
+library(ggthemes)
+library(scales)
+theme_classy <-  function(base_size=12) { 
+  theme_foundation(base_size=base_size) +
+  theme(rect=element_rect(fill=NA,colour=NA),
+        legend.position="bottom",
+        text=element_text(family="Palatino",size = base_size,colour="black"),
+        line=element_line(size=0,colour="black"),
+        axis.title.y=element_text(angle=0),
+        axis.line=element_line(size=0.5,colour = "black",linetype=1),
+        axis.ticks=element_line(size=0.5,color="black"),
+        panel.grid=element_line(size=0.5,colour="gray",linetype = 2),
+        panel.grid.minor=element_line(size=0.0,colour=NA,linetype = 2),
+        strip.text=element_text(size=base_size*1.5),
+        legend.text=element_text(size=base_size),
+        legend.title=element_text(family="Gill Sans"))
+}
+```
+
+```{r echo=FALSE}
+library(RSSL)
+library(magrittr)
+library(ggplot2)
+
+set.seed(1)
+
+df_problem <- 
+  generate2ClassGaussian(n=200,d=2,var=0.3) %>%
+  add_missinglabels_mar(Class~., prob=0.95)
+
+problem <- 
+  df_problem %>% 
+  SSLDataFrameToMatrices(Class~.,.)
+
+g_em <- EMLeastSquaresClassifier(problem$X,problem$y,problem$X_u)
+g_sup <- LeastSquaresClassifier(problem$X,problem$y)
+
+df_problem %>% 
+  na.omit %>% 
+  ggplot(aes(x=X1,y=X2,color=Class,shape=Class)) +
+  theme_classy() +
+  coord_equal() +
+  geom_classifier("Supervised"=g_sup,"EM"=g_em) +
+  geom_responsibilities(g_em,data.frame(problem$X_u)) +
+  geom_point(size=4) +
+  theme(legend.position="right") +
+  labs(fill="RESPONSIBILITY",
+       colour="CLASS",
+       linetype="CLASSIFIER",
+       shape="CLASS")
+```
