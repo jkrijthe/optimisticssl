@@ -1,15 +1,17 @@
+# Experiment to generate learning curves with a changing fraction of labeled objects
+
 library(methods)
 library(RSSL)
 library(createdatasets)
+library(randomForest)
+library(parallel)
 
-setdatadir("~/Data")
+set.seed(42)
+
+setdatadir("data")
 
 measures <- list("Error"=measure_error,
                  "Average Loss Test"=measure_losstest)
-
-library(createdatasets)
-library(randomForest)
-
 
 detectBatchCPUs <- function() { 
   ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK")) 
@@ -25,7 +27,6 @@ detectBatchCPUs <- function() {
   return(ncores) 
 }
 
-setdatadir("~/Data")
 datasets<-list("Haberman"=createHaberman(),
                "Ionosphere"=createIonosphere(),
                "Parkinsons"=createParkinsons(),
@@ -65,19 +66,15 @@ classifiers <- list(
     LeastSquaresClassifier(X,y)
   },
   "Soft" = function(X,y,X_u,y_u) {
-    ch<-EMLeastSquaresClassifier(X,y,X_u, eps = 1e-8, method="block", objective="soft", max_iter=10000)
-    #print(ch@opt_res$counts)
-    ch
+    EMLeastSquaresClassifier(X,y,X_u, eps = 1e-8, method="block", objective="soft", max_iter=10000)
   },
   "Hard" = function(X,y,X_u,y_u) {
-    ch<- EMLeastSquaresClassifier(X,y,X_u, eps = 1e-8, method="block", objective="hard", max_iter=10000)
-    #print(ch@opt_res$counts)
-    ch
+    EMLeastSquaresClassifier(X,y,X_u, eps = 1e-8, method="block", objective="hard", max_iter=10000)
   },
   "Oracle"=function(X,y,X_u,y_u) {LeastSquaresClassifier(rbind(X,X_u),unlist(list(y,y_u)),intercept=TRUE,x_center=TRUE,scale=FALSE) }
 )
 
-set.seed(42)
+
 lc <- LearningCurveSSL(models,datasets,
                        classifiers=classifiers,
                        measures=measures,
@@ -87,4 +84,4 @@ lc <- LearningCurveSSL(models,datasets,
                        pre_scale = TRUE, pre_pca = TRUE,
                        low_level_cores = detectBatchCPUs())
 
-save(lc,file="learningcurves-fraction.RData")
+save(lc,file="R/learningcurves-fraction.RData")

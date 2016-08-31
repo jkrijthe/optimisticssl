@@ -1,17 +1,21 @@
+# Experiment to test how often hard-label and soft-label self-learning 
+# for the least squares classifier get stuck in local optima.
+
 library(methods)
 library(RSSL)
 library(createdatasets)
 library(magrittr)
-
-setdatadir("~/Data")
-
-measures <- list("Error"=measure_error,
-                 "Average Loss Test"=measure_losstest)
-
 library(createdatasets)
 library(randomForest)
+library(dplyr)
+library(tidyr)
 
-setdatadir("~/Data")
+set.seed(4)
+
+# Change this if you want to store the datasets in a different location
+setdatadir("data") 
+
+# Load datasets
 datasets<-list("Haberman"=createHaberman(),
                "Ionosphere"=createIonosphere(),
                "Parkinsons"=createParkinsons(),
@@ -45,56 +49,60 @@ models <- list("Haberman"=formula(Survival~.),
                "BCI"=formula(Class ~ .),
                "g241c"=formula(Class ~ .),
                "g241d"=formula(Class ~ .))
-set.seed(4)
 
+# Set measures
+measures <- list("Error"=measure_error,
+                 "Average Loss Test"=measure_losstest)
 
 perfs_hard <- list()
 perfs_soft <- list()
-resamp <- 10
-reinit <- 50
+resamp <- 10 # Number of times we resample from a dataset
+reinit <- 50 # Number of times we reinitialize the self-learner
+
 for (d in names(datasets)) {
   df <- datasets[[d]]
   mf <- models[[d]]
   perf_soft <- matrix(NA,reinit+2,resamp)
   perf_hard <- matrix(NA,reinit+2,resamp)
-for (j in 1:resamp) {
   
-  idx_train <- sample(1:nrow(df),round(0.7*nrow(df)))
-  df_train <- df[idx_train,,drop=FALSE]
-  df_test <- df[-idx_train,,drop=FALSE]
-  df_train <- df_train %>% add_missinglabels_mar(mf, 0.8)
-  
-  c_sup <- LeastSquaresClassifier(mf,df_train)
-  
-  c_init_hard <- EMLeastSquaresClassifier(mf,df_train,method="block",init="supervised",objective="hard")
-  c_init_soft <- EMLeastSquaresClassifier(mf,df_train,method="block",init="supervised",objective="soft")
-  
-  perf_hard[1,j] <- mean(predict(c_sup,df_test)==df_test[[all.names(mf)[2]]])
-  perf_hard[2,j] <- mean(predict(c_init_hard,df_test)==df_test[[all.names(mf)[2]]])
-  
-  perf_soft[1,j] <- mean(predict(c_sup,df_test)==df_test[[all.names(mf)[2]]])
-  perf_soft[2,j] <- mean(predict(c_init_soft,df_test)==df_test[[all.names(mf)[2]]])
-  
-  for (i in 1:reinit) {
-    c_rand_hard <- EMLeastSquaresClassifier(mf,df_train,method="block",init="random",objective="hard")
-    c_rand_soft <- EMLeastSquaresClassifier(mf,df_train,method="block",init="random",objective="soft")
+  # Do multiple resamplings from the datasets
+  for (j in 1:resamp) {
     
-    perf_soft[i+2,j] <-  mean(predict(c_rand_soft,df_test)==df_test[[all.names(mf)[2]]])
-    perf_hard[i+2,j] <-  mean(predict(c_rand_hard,df_test)==df_test[[all.names(mf)[2]]])
+    idx_train <- sample(1:nrow(df),round(0.7*nrow(df)))
+    df_train <- df[idx_train,,drop=FALSE]
+    df_test <- df[-idx_train,,drop=FALSE]
+    df_train <- df_train %>% add_missinglabels_mar(mf, 0.8)
+    
+    c_sup <- LeastSquaresClassifier(mf,df_train)
+    
+    c_init_hard <- EMLeastSquaresClassifier(mf,df_train,
+                      method="block",init="supervised",objective="hard")
+    c_init_soft <- EMLeastSquaresClassifier(mf,df_train,
+                      method="block",init="supervised",objective="soft")
+    
+    perf_hard[1,j] <- mean(predict(c_sup,df_test)==df_test[[all.names(mf)[2]]])
+    perf_hard[2,j] <- mean(predict(c_init_hard,df_test)==df_test[[all.names(mf)[2]]])
+    
+    perf_soft[1,j] <- mean(predict(c_sup,df_test)==df_test[[all.names(mf)[2]]])
+    perf_soft[2,j] <- mean(predict(c_init_soft,df_test)==df_test[[all.names(mf)[2]]])
+    
+    # Do multiple initializations
+    for (i in 1:reinit) {
+      c_rand_hard <- EMLeastSquaresClassifier(mf,df_train,
+                        method="block",init="random",objective="hard")
+      c_rand_soft <- EMLeastSquaresClassifier(mf,df_train,
+                        method="block",init="random",objective="soft")
+      
+      perf_soft[i+2,j] <-  mean(predict(c_rand_soft,df_test)==df_test[[all.names(mf)[2]]])
+      perf_hard[i+2,j] <-  mean(predict(c_rand_hard,df_test)==df_test[[all.names(mf)[2]]])
+    }
+    print(j)
   }
-  print(j)
+  perfs_hard[[d]] <- perf_hard
+  perfs_soft[[d]] <- perf_soft
 }
-perfs_hard[[d]] <- perf_hard
-perfs_soft[[d]] <- perf_soft
-}
-#save(perfs_hard,perfs_soft,file="localoptima.RData")
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(cowplot)
 
-
-
+# Generate data frames for plotting
 df_soft <- 
   lapply(names(perfs_soft),function(x){
     perfs_soft[[x]] %>% 
@@ -115,28 +123,4 @@ df_hard <-
   bind_rows %>% 
   mutate(Experiment="Hard")
 
-save(df_soft,df_hard,file="localoptima.RData")
-
-df_soft %>% 
-  rbind(df_hard) %>%
-  gather(Repeat,Value,-Type,-Dataset,-Experiment) %>% 
-  filter(Repeat=="V1") %>% 
-  ggplot(aes(x=Dataset,y=Value,color=Type,size=Type)) +
-  geom_point(alpha=0.7) +
-  scale_color_manual(values=c(Supervised="blue",Hard="red",Soft="Green",Random="black")) +
-  scale_size_manual(values=c(Supervised=3,Hard=3,Soft=3,Random=1)) +
-  facet_grid(~Experiment)
-
-
-
-perf %>% 
-  as.data.frame %>% 
-  mutate(.,Type=c("Supervised","Hard",rep("Random",nrow(.)-2))) %>% 
-  gather(Repeat,Value,-Type) %>% 
-  ggplot(aes(x=Repeat,y=Value,color=Type,size=Type)) +
-  geom_point(alpha=0.7) +
-  scale_color_manual(values=c(Supervised="blue",Hard="red",Random="black")) +
-  scale_size_manual(values=c(Supervised=3,Hard=3,Random=1))
-
-perf <- perf16
-perfold <- perf 
+save(df_soft,df_hard,file="R/localoptima.RData")
