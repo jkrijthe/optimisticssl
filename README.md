@@ -16,7 +16,7 @@ The goal of semi-supervised learning is to improve supervised classifiers by usi
 After installing R, install the dependencies using:
 ```{r}
 install.packages(c("devtools","ggthemes","magrittr","dplyr",
-"tidyr","cowplot","randomForest","knitr"))
+"tidyr","cowplot","randomForest","knitr","R.matlab"))
 
 devtools::install_github("jkrijthe/createdatasets",
               ref="55929afcc0f966f4e49bcf03685e04803d19353b")
@@ -28,7 +28,7 @@ The last dependency requires a correctly configured C++ compiler to be set up. O
 To generate the paper, a working Latex installation is required.
 
 ## Running the experiments
-To rerun the experiments, from the commandline, run the following commands:
+To rerun the experiments, from the command line, run the following commands:
 ```{bash}
 Rscript R/attraction1d.R
 Rscript R/localoptima.R

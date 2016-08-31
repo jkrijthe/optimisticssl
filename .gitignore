@@ -13,4 +13,4 @@
 cache/
 correspondence/
 exploration/
-data/*
+data/*.rds
