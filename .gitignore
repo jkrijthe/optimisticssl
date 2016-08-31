@@ -11,3 +11,5 @@
 *.upb
 *-concordance.tex
 cache/
+correspondence/
+exploration/
