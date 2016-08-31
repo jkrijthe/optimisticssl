@@ -20,7 +20,7 @@ Netherlands}
 \maketitle
 
 \begin{abstract}
-The goal of semi-supervised learning is to improve supervised classifiers by using additional unlabeled training examples. In this work we study a simple self-learning approach to semi-supervised learning applied to the least squares classifier. We show that a soft-label and a hard-label variant of self-learning can be derived by applying block coordinate descent to two related but slightly different objective functions. The resulting soft-label approach is related to an idea of dealing with missing data that dates back to the 1930s. We show that the soft-label variant typically outperforms the hard-label variant on benchmark datasets and partially explain this behaviour by studying the relative difficulty of finding good local minima for the corresponding objective functions.
+The goal of semi-supervised learning is to improve supervised classifiers by using additional unlabeled training examples. In this work we study a simple self-learning approach to semi-supervised learning applied to the least squares classifier. We show that a soft-label and a hard-label variant of self-learning can be derived by applying block coordinate descent to two related but slightly different objective functions. The resulting soft-label approach is related to an idea about dealing with missing data that dates back to the 1930s. We show that the soft-label variant typically outperforms the hard-label variant on benchmark datasets and partially explain this behaviour by studying the relative difficulty of finding good local minima for the corresponding objective functions.
 \end{abstract}
 
 \IEEEpeerreviewmaketitle
@@ -32,14 +32,14 @@ Instead of introducing yet another assumption to the literature, the goal of thi
 
 This soft-label self-learning procedure is closely related to a procedure that dates all the way back to an approach to missing data in least squares regression by Yates \cite{Yates1933} and Healy and Westmacott \cite{Healy1956} from the 1930s and 1950s respectively. We revisit these ideas in the context of the present paper.
 
-In a set of experiments, we show that the soft-label self-learning variant tends to outperform the hard-label variant. We explain this behaviour based on the differing difficulty of finding a good local minimum of the corresponding objective functions. 
+In a set of experiments, we show that the soft-label self-learning variant tends to outperform the hard-label variant. We explain this behaviour based on the differing difficulty of finding good local minima of the corresponding objective functions. 
 
 The paper is structured as follows: we will first explain how our ideas relate to early approaches to deal with missing data in statistics and to the well known self-learning and expectation maximization (EM) approaches to semi-supervised learning. Afterwards we will formulate two different objective functions for the semi-supervised least squares classification problem. We show that applying block coordinate descent \cite[Ch. 2.7]{Bertsekas1999} to these objective functions corresponds to either hard-label, respectively soft-label self-learning. We then study the properties of these objective functions using some simulation studies and end with a set of experiments on benchmark datasets that shows that soft-label self-learning tends to outperform the hard-label variant.
 
 \section{Historical Perspective}
 
 \subsection{Self-learning and EM}
-Arguably, the most simple and straightforward approach to semi-supervised learning is a procedure known as self-learning. Starting with the supervised classifier trained using only labeled data, one predicts the labels for the unlabeled objects and uses these in the next iteration of training the classifier. This is done until the predicted labels of the unlabeled objects no longer change. Self-learning was introduced by \cite{McLachlan1975,McLachlan1977} as a more feasible alternative to the proposal by \cite{Hartley1968} to consider all possible labelings of the unlabeled data and find the one that minimizes the log likelihood of an ANOVA model.
+Arguably, the most simple and straightforward approach to semi-supervised learning is a procedure known as self-learning. Starting with the supervised classifier trained using only labeled data, one predicts the labels for the unlabeled objects and uses these in the next iteration of training the classifier. This is done until the predicted labels of the unlabeled objects no longer change. Self-learning was introduced in \cite{McLachlan1975} and \cite{McLachlan1977} as a more feasible alternative to the proposal by \cite{Hartley1968b} to consider all possible labelings of the unlabeled data and find the one that minimizes the log likelihood of an ANOVA model.
 
 For probabilistic models, such as linear discriminant analysis based on a Gaussian model of each class, a closely related approach to self-learning is to apply the Expectation Maximization (EM) procedure \cite{Dempster1977} that attempts to find the parameters that maximize the likelihood  of the model after marginalizing out the unknown labels. This leads to an algorithm where in each iteration, the parameters of the model are estimated based on the current partial assignment of objects to different classes (the maximization step), after which these assignments are updated based on the new model parameters (the expectation step). The assignments of unlabeled objects to classes in each stage is a partial assignment based on the posterior probability given by the current parameter estimates of the model, rather than a hard assignment to a single class as is typically used in self-learning.
 
@@ -51,10 +51,10 @@ Note that the goal of these procedures is to deal with missing values in a conve
 
 % Preece builds upon this work by suggesting larger updates of the missing values in each iteration to speed up convergence. This is based on the observation that the procedure proposed by Yates for a single missing value uses a larger update than the simple scheme by Healy and Westmacott. 
 
-Unlike in the regression setting, in least squares classification, we know that the true labels are not values in $\mathbb{R}$ but rather restricted to $\{0,1\}$, or as we will consider, $[0,1]$. We will show that the iterative approach of \cite{Healy1956}, when taking into account the constraints that missing outcomes are $[0,1]$ can be formulated as a block coordinate descent procedure on the quadratic loss function and that, in fact, an improved classifier can generally be obtained by using this procedure.
+Unlike in the regression setting, in least squares classification, we know that the true labels are not values in $\mathbb{R}$ but rather restricted to $\{0,1\}$, or as we will consider, $[0,1]$. We will show that the iterative approach of \cite{Healy1956}, when taking into account the constraints that missing outcomes are $[0,1]$ can be formulated as a block coordinate descent procedure on the quadratic loss function and that, in fact, an improved classifier can generally be obtained by using this procedure. For a different take on how to introduce soft-labels in self-learning and how this relates to EM, see \cite{Mey2016}.
 
 \subsection{Pessimism vs. Optimism}
-To guard against unlabeled data leading to worse classifiers one can attempt to construct a classifier that improves over the supervised classifier even for the worst possible labeling of the unlabeled objects, which is proposed in contrastive pessimistic learning \cite{Loog2016} and \cite{Krijthe2015}. This is the pessimistic approach to semi-supervised learning. In contrast, we refer to the approaches studied here as optimistic approaches, where in each step of the algorithm, we consider the best-case labels, rather than the worst-case labels.
+To guard against unlabeled data leading to worse classifiers one can attempt to construct a classifier that improves over the supervised classifier even for the worst possible labeling of the unlabeled objects, which is proposed in contrastive pessimistic learning, see \cite{Loog2016} and \cite{Krijthe2015}. This is the pessimistic approach to semi-supervised learning. In contrast, we refer to the approaches studied here as optimistic approaches, where in each step of the algorithm, we consider the best-case labels, rather than the worst-case labels.
 
 \section{Regularized Least Squares Classification}
 Let $\mathbf{x}$ denote a $d\times 1$ feature vector, potentially containing a constant feature encoding the intercept.
@@ -105,7 +105,7 @@ df_gauss  %>%
 We present two closely related ways to extend the supervised least squares objective function to include unlabeled data in an optimistic way. We refer to the first formulation as the label based formulation and show that applying a block coordinate descent procedure to this objective function corresponds to a type of soft-label self-learning, similar to Expectation Maximization. The second formulation is a very similar responsibility based formulation where a block coordinate descent approach corresponds to the familiar hard-label self-learning.
 
 \subsection{Label Based Formulation}
-A straightforward way to include the unlabeled objects into the objective function \eqref{eq:supervisedobjective} is to introduce a variable for the missing labels $\mathbf{u}$ using the supervised objective function as if we knew these labels:
+A straightforward way to include the unlabeled objects into the objective function \eqref{eq:supervisedobjective} is to introduce a variable for the missing labels $\mathbf{u}$ and then use the supervised objective function as if we knew these labels:
 $$
 J_l(\mathbf{w},\mathbf{u}) = \| \Xe \mathbf{w}-\begin{bmatrix} \mathbf{y} \\ \mathbf{u} \end{bmatrix} \|^2 + \lambda \|\mathbf{w} \|^2
 $$
@@ -135,12 +135,12 @@ Taking into account, however, the constraint that $\mathbf{u} \in [0,1]^U$, the 
 $$
 u_i = 
 \begin{cases}
-0, & \text{if } 0 < \mathbf{x}_i^\top \mathbf{w} < 0\\
+0, & \text{if } \mathbf{x}_i^\top \mathbf{w} < 0\\
 \mathbf{x}_i^\top \mathbf{w}, & \text{if } 0 < \mathbf{x}_i^\top \mathbf{w} < 1\\
 1, & \text{if } \mathbf{x}_i^\top \mathbf{w} > 1
 \end{cases}
 $$
-In this formulation, for a given $\mathbf{w}$ we get hard labelings whenever the decision function gives a value outside $[0,1]$, but a soft assignment, between $(0,1)$, if it does not. 
+In this formulation, for a given $\mathbf{w}$ we get hard labelings whenever the decision function gives a value outside $(0,1)$, but a soft assignment, between $(0,1)$, if it does not.
 
 
 <<attraction1d, echo=FALSE, fig.env='figure*', fig.height=2.8, fig.cap='Convergence paths of the block coordinate descent procedure for different starting values for the label based objective function (left) and responsibility based objective function (right). Shown are the weights corresponding to the intercept and single feature of a classifier applied to the problem shown in Figure 1. Shown in red is the optimization path starting with the supervised solution.'>>=
@@ -163,7 +163,7 @@ plot_soft <- df_soft  %>%
                ungroup) + 
   coord_equal(xlim =c(-0.5,1.5),ylim=c(-1,0.5)) +
   geom_path(aes(x=Intercept,y=Slope),
-            color="red",size=2,data=c_soft %>% classifier2df, 
+            color="#D62728",size=2,data=c_soft %>% classifier2df, 
             inherit.aes = FALSE) +
   ggtitle("Soft Labeling") +
   theme(text=element_text(family="Times",size=10),
@@ -174,7 +174,7 @@ plot_hard <-  df_hard %>%
   ggplot(aes(x=Intercept,y=Slope,group=Run)) + 
   geom_path(alpha=0.5,size=0.5) + 
   geom_point(size=2, data=df_hard %>% group_by(Run) %>% filter(Iteration==max(Iteration)) %>% ungroup) +
-  geom_path(aes(x=Intercept,y=Slope),color="red",size=2,data=c_hard  %>% classifier2df, inherit.aes = FALSE) + coord_equal(xlim =c(-0.5,1.5),ylim=c(-1,0.5)) +
+  geom_path(aes(x=Intercept,y=Slope),color="#D62728",size=2,data=c_hard  %>% classifier2df, inherit.aes = FALSE) + coord_equal(xlim =c(-0.5,1.5),ylim=c(-1,0.5)) +
   ggtitle("Hard Labeling") +
   theme(text=element_text(family="Times",size=10),
         axis.text=element_text(size=10))
@@ -184,7 +184,7 @@ plot_grid(plot_soft, plot_hard)
 
 
 \subsection{Responsibility Based Formulation}
-A different way to include the unlabeled data is by introducing a variable $\mathbf{q} \in [0,1]^U$ that indicates what portion of the loss of the two classes should be attributed to the loss for each unlabeled object. We refer to this $\mathbf{q}$ as a responsibility. While the responsibility is closely related to soft-labels in the previous section, it leads to a slightly different loss function. For generality, let $m$ be the numerical encoding used for one class and $n$ for the other. In this work, we shall use $m=1$ and $n=0$. The objective function becomes:
+A different way to include the unlabeled data is by introducing a variable $\mathbf{q} \in [0,1]^U$ that indicates what portion of the loss of the two classes should be attributed to the loss for each unlabeled object. We refer to this $\mathbf{q}$ as a vector of responsibilities. While the responsibility is closely related to soft-labels in the previous section, it leads to a slightly different loss function. For generality, let $m$ be the numerical encoding used for one class and $n$ for the other. In this work, we shall use $m=1$ and $n=0$. The objective function becomes:
 \begin{align}
 J_r(\mathbf{w},\mathbf{q}) = & \| \mathbf{X} \mathbf{w}-\mathbf{y} \|^2 + \lambda \|\mathbf{w} \|^2 \nonumber \\
 & + \sum_{i=1}^{U}  q_i (\mathbf{x}_i^\top \mathbf{w} - m)^2  + (1-q_i) (\mathbf{x}_i^\top \mathbf{w} - n)^2 \,. \nonumber \\ \nonumber
@@ -201,7 +201,7 @@ More specifically, in the encoding used here:
 $$
 \frac{\nabla J_r}{\nabla q_i} = - 2 (\mathbf{x}_i^\top \mathbf{w}-0.5) \,.
 $$
-If the responsibilities are fixed, this objective function leads to the same solution as the label based objective. Unlike for the label based objective, the objective function is now linear in the responsibilities. Minimizing the responsibilities for a given $\mathbf{w}$ leads to setting $q_i=0$ if  $\mathbf{x}_i^\top \mathbf{w}>0.5$ and $q=1$ if $\mathbf{x}_i^\top \mathbf{w}<0.5$
+If the responsibilities are fixed, this objective function leads to the same solution as the label based objective. Unlike for the label based objective, the objective function is now linear in the responsibilities. Minimizing the responsibilities for a given $\mathbf{w}$ leads to setting $q_i=1$ if  $\mathbf{x}_i^\top \mathbf{w}>0.5$ and $q_i=0$ if $\mathbf{x}_i^\top \mathbf{w}<0.5$
 
 Unlike in the previous approach, the optimal procedure becomes to assign hard labelings to each object when $\mathbf{w}$ is kept fixed.
 
@@ -249,14 +249,14 @@ $$
 $$  
 for all $\mathbf{z}_1 \in \mathbb{R}^{d}$ and $\mathbf{z}_2 \in \mathbb{R}^{U}$ . When $\mathbf{X}_\text{u}\neq 0$ and $\mathbf{z}_1\neq 0$  it is always possible to pick some $\mathbf{z}_2$ such that the constraint does not hold, so this function is typically not convex either.
 
-Similar to EM-based approaches, we lose convexity for both semi-supervised extensions. One of the extensions may still be easier to optimize than the other. We illustrate the difference between the two objective functions by applying both approaches to the simple dataset shown in Figure~\ref{fig:attractionexample}. We randomly generate $100$ starting values around the supervised solution and plot the convergence of the block coordinate descent procedure for both algorithms in Figure~\ref{fig:attraction1d}. The red line indicates the path of solution when starting at the supervised solution. For the soft-label objective, all starting values converge to the same optimum, while for the hard-label approach, the algorithm converges to four different optima, corresponding to assigning all objects to one of the classes and the two assignments of the clusters to different classes.
+Similar to EM-based approaches, we lose convexity for both semi-supervised extensions. One of the extensions may still be easier to optimize than the other. We illustrate the difference between the two objective functions by applying both approaches to the simple dataset shown in Figure~\ref{fig:attractionexample}. We randomly generate $100$ starting values around the supervised solution and plot the convergence of the block coordinate descent procedure for both algorithms in Figure~\ref{fig:attraction1d}. The red line indicates the path of solution when starting at the supervised solution. For the soft-label objective, all starting values converge to the same optimum, while for the hard-label approach, the algorithm converges to four different optima, corresponding to assigning all objects to one of the classes and the two assignments of the clusters to the different classes.
 
 \section{Experiments \& Results}
 
 \subsection{Why soft-labeling can lead to improved predictions}
 For hard self-labeling, it is clear why the semi-supervised solution will generally be different from the supervised procedure: for a lot of classifiers it is unlikely that the minimizer of the loss after assigning labels to the unlabeled objects is going to be exactly the same as the minimizer of the loss on the supervised objects. In the soft-label case, it is less clear: because the labeling is more fine-grained, it may be possible to find some assignment of the labels such that the loss does not change. Figure~\ref{fig:simple-example} illustrates when an update of the classifier occurs: starting with the supervised decision function (solid line), we can set the label of the unlabeled object on the left to $0$, such that its contribution to the loss function is $0$. For the object on the right, however, the best we can do is setting the label to $1$. In the next step, the classifier is updated, after which the labels are updated again. This time, the optimal labeling for the right object is again 1, while the optimum for the left object has now changed due to the updated decision function. The effect is that even as the changes are brought about by objects that have decision values greater than $1$ or smaller than $0$, updates lead to a weight vector that has not only changed in magnitude, but the location of the decision boundary has also shifted based on the configuration of the unlabeled objects.
 
-<<simple-example, echo=FALSE, fig.height=4, fig.cap="Example of the first step of soft-label self-learning. The circles indicate two labeled objects, while the dashed vertical lines indicate the location of two unlabeled objects. The solid line is the supervised decision function. The dotted line indicates the updated decision function after finding the labels that minimize the loss of the supervised solution and using these labels as the labels for the unlabeled data in the next iteration.">>=
+<<simple-example, echo=FALSE, fig.height=4, fig.cap="Example of the first step of soft-label self-learning. The circles indicate two labeled objects, while the dashed vertical lines indicate the location of two unlabeled objects. The solid line is the supervised decision function. The dotted line indicates the updated decision function after finding soft labels that minimize the loss of the supervised solution and using these labels as the labels for the unlabeled data in the next iteration.">>=
 library(RSSL)
 library(ggplot2)
 library(magrittr)
@@ -265,7 +265,6 @@ library(knitr)
 library(dplyr,warn.conflicts=FALSE)
 opts_chunk$set(echo=FALSE)
 
-# ICLS update example
 X <- matrix(c(-1,1),2,1) 
 y <- factor(c("A","B"))
 X_u <-  matrix(c(-1,4), 2, 1) 
@@ -287,9 +286,9 @@ b3 <- solve(t(X_e) %*% X_e, t(X_e) %*% t(t(y)))
 data.frame(X,y=c(0,1)) %>% 
   ggplot(aes(x=X,y=y)) +
   geom_point(size=5) +
-  geom_vline(xintercept=-1,linetype=2) +
-  geom_vline(xintercept=4,linetype=2) +
-  scale_x_continuous(limits=c(-3,5)) +
+  geom_vline(xintercept=X_u[1,],linetype=2) +
+  geom_vline(xintercept=X_u[2,],linetype=2) +
+  scale_x_continuous(limits=c(X_u[1,]-2,X_u[2,]+1)) +
   geom_smooth(method="lm",se=FALSE,fullrange=TRUE,color="black",size=1.2) +
   theme_foundation() +
   theme(rect=element_rect(fill=NA,colour=NA),
@@ -331,11 +330,12 @@ df_gauss %>%
   geom_point(aes(x=X1,y=X2),color="black",size=1,data=df_gauss %>% filter(is.na(Class))) +
   geom_point(aes(x=X1,y=X2,color=Class,shape=Class),size=6,data=df_gauss %>% filter(!is.na(Class)),inherit.aes = FALSE) +
   coord_equal() +
-  geom_classifier("Supervised"=c_sup,"Hard"=c_self,"Soft"=c_em) +
+  geom_linearclassifier("Supervised"=c_sup,"Hard"=c_self,"Soft"=c_em) +
   scale_size(guide="none") +
   scale_colour_tableau(guide="none") +
   scale_shape(guide="none") +
   theme_foundation() +
+  scale_linetype(name="Classifier") +
   geom_abline(slope=1,intercept=0,color="grey",size=2) +
   theme(rect=element_rect(fill=NA,colour=NA),
         legend.position="bottom",
@@ -352,9 +352,9 @@ df_gauss %>%
 
 
 \subsection{Why hard-labeling might fail}
-While Figure~\ref{fig:attraction1d} indicated that the hard-label approach can more easily get stuck in a bad local optimum, using the supervised solution as the initialization leads to a reasonable solution. Figure~\ref{fig:example} shows an example where this is not the case, and the hard-label approach leads away from the reasonable supervised solution to one that has worse performance. The soft-label procedure, an the other hand, gives a classifier that is similar to the supervised procedure.
+While Figure~\ref{fig:attraction1d} indicated that the hard-label approach can more easily get stuck in a bad local optimum, using the supervised solution as the initialization leads to a reasonable solution. Figure~\ref{fig:example} shows an example where this is not the case, and the hard-label approach leads away from the reasonable supervised solution to one that has worse performance. The soft-label procedure, on the other hand, gives a classifier that is similar to the supervised procedure.
 
-\subsection{Local Optima}
+\subsection{Local optima}
 One might wonder how often these bad local minima occur on benchmark datasets. We take a set of $16$ well-known datasets from \cite{Chapelle2006} and the UCI repository \cite{Lichman2013}. Figure~\ref{fig:localoptima} shows the classification performance of the solutions the algorithms converge to for several random initialization of the algorithm and when the algorithms are initialized using the supervised solution. For each dataset, we randomly assign $20\%$ of the objects to the test set, and randomly remove labels from $80\%$ of the remaining objects. We randomly initialize the algorithms $50$ times. In all experiments, $\lambda=0$. The figure shows that the soft-label approach reaches far fewer local optima, compared to the hard-label approach.
 
 <<localoptima, echo=FALSE, warning=FALSE,message=FALSE,  fig.cap="Each black dot represents the performance of a randomly initialized run of the algorithm. The red points indicate the performance of the hard-label procedure, initialized in the supervised solution. The green points indicate the performance of the soft-label procedure, initialized in the supervised solution. Blue points indicate the performance of the supervised solution. Notice the difference in the number of unique minima of the two procedures.",fig.height=9>>=
@@ -371,7 +371,7 @@ df_soft %>%
   mutate(Type=factor(Type,levels=c("Random","Supervised","Soft","Hard"),labels=c("Random","Supervised","Soft","Hard"))) %>% 
   ggplot(aes(y=Experiment,x=Value,color=Type,size=Type)) +
   geom_point(alpha=1.0) +
-  scale_color_manual(values=c(Supervised="blue",Hard="red",Soft="green",Random="black")) +
+  scale_color_manual(values=c(Supervised="#1F77B4",Hard="#D62728",Soft="#2CA02C",Random="black")) +
   scale_size_manual(values=c(Supervised=4,Hard=4,Soft=4,Random=1.5)) +
   facet_grid(Dataset~.,switch="y") +
   xlab("Accuracy") +
@@ -393,10 +393,10 @@ df_soft %>%
 @
 
 
-\subsection{Increasing the Number of Unlabeled Examples}
+\subsection{Increasing the number of unlabeled examples}
 We study the effects of using an increasing number of unlabeled examples, while keeping the number of labeled examples fixed. The procedure is set us as follows: for each dataset we sample $L$ objects without replacement to form the labeled set. We choose $L>d$, the number of features in the dataset to ensure the supervised least squares solution is well-defined. We then sample an increasing number of unlabeled examples ($U=1,2,4,\dots,256$) without replacement, and use the remaining samples as the test set. Each classifier is trained on the labeled and unlabeled examples and their classification performance is evaluated on the test set. This procedure is repeated $1000$ times. Apart from the soft- and hard-label self-learning procedures, we also consider an \emph{Oracle} least squares solution, which has access to the labels of the unlabeled objects. This can be considered an upper bound on the performance of any semi-supervised learning procedure. The results are shown in Figure~\ref{fig:learningcurves}.
 
-<<learningcurves, echo=FALSE, warning=FALSE,message=FALSE,  fig.env='figure*', fig.cap="Classification errors for increasing amounts of unlabeled data. The number of labeled objects remains fixed at a number larger than the dimensionality of the dataset to ensure the supervised solution is well-defined. Results are averaged over $1000$ repeats.",fig.height=5.65>>=
+<<learningcurves, echo=FALSE, warning=FALSE,message=FALSE,  fig.env='figure*', fig.cap="Classification errors for increasing amounts of unlabeled data. The number of labeled objects remains fixed at a number larger than the dimensionality of the dataset to ensure the supervised solution is well-defined. Results are averaged over $1000$ repeats.",fig.height=5.55>>=
 library(RSSL)
 library(dplyr)
 library(ggplot2)
@@ -415,7 +415,7 @@ lc$results %>%
   scale_x_continuous(trans=log_trans(2)) +
   ylab("Error") +
   theme_foundation() +
-  scale_color_manual(values=c("Soft"="red","Hard"="black","Supervised"="black","Oracle"="grey")) +
+  scale_color_manual(values=c("Soft"="#D62728","Hard"="black","Supervised"="black","Oracle"="grey")) +
   theme(rect=element_rect(fill=NA,colour=NA),
         legend.position="bottom",
         text=element_text(family="Times",size = 10,colour="black"),
@@ -456,7 +456,7 @@ This work was funded by project P23 of the Dutch public/private research network
 %'   mutate(Sol=c("Supervised",rep("Random",100))) %>% 
 %'   ggplot() +
 %'   geom_segment(aes(x=s2,xend=w2,y=s3,yend=w3,color=Sol),arrow = arrow(length = unit(0.00, "npc")),size=0.4,alpha=0.5) +
-%'   scale_color_manual(values=c("black","red")) +
+%'   scale_color_manual(values=c("black","#D62728")) +
 %'   ggtitle("Soft Labeling") +
 %'   theme(legend.position="none")
 %' 
@@ -467,44 +467,14 @@ This work was funded by project P23 of the Dutch public/private research network
 %'   mutate(Sol=c("Supervised",rep("Random",100))) %>%
 %'   ggplot() +
 %'   geom_segment(aes(x=s2,xend=w2,y=s3,yend=w3,color=Sol),size=0.4,alpha=0.5) +
-%'   scale_color_manual(values=c("black","red")) +
+%'   scale_color_manual(values=c("black","#D62728")) +
 %'   ggtitle("Hard Labeling") +
 %'   theme(legend.position="none")
 %' 
 %' plot_grid(plot_soft, plot_hard)
 %' @
 % '
-% ' #' <<learningcurves-frac, echo=FALSE, warning=FALSE,message=FALSE,  fig.env='figure*', fig.cap="Classification accuracy when different fractions of the training set are labeled. $20\\%$ of the data is left out as test data, the fractions indicate the fraction of objects of the remaining data that was labeled.",fig.height=6>>=
-% ' #' library(RSSL)
-% ' #' library(dplyr)
-% ' #' library(ggplot2)
-% ' #' library(scales)
-% ' #' load("R/learningcurves-fraction.RData")
-% ' #' lc$results %>%
-% ' #'  as.tbl %>%
-% ' #'  filter(Measure=="Error") %>%
-% ' #'  filter(`Fraction of labeled objects`>0.1) %>%
-% ' #'  group_by(Classifier, Dataset, Measure,`Fraction of labeled objects`) %>%
-% ' #'  summarize(value=mean(value)) %>%
-% ' #'  ungroup %>%
-% ' #'  ggplot(aes(x=`Fraction of labeled objects`,y=value,linetype=Classifier,color=Classifier)) +
-% ' #'  geom_line() +
-% ' #'  facet_wrap(~Dataset,scales = "free") +
-% ' #'  ylab("Error") +
-% ' #'  theme_foundation() +
-% ' #'  scale_color_manual(values=c("Soft"="red","Hard"="black","Supervised"="black","Oracle"="grey")) +
-% ' #'  theme(rect=element_rect(fill=NA,colour=NA),
-% ' #'        legend.position="bottom",
-% ' #'        text=element_text(family="Palatino",size = 10,colour="black"),
-% ' #'        line=element_line(size=0,colour="black"),
-% ' #'        #axis.title.y=element_text(angle=0),
-% ' #'        axis.line=element_line(size=0.5,colour = "black",linetype=1),
-% ' #'        axis.ticks=element_line(size=0.5,color="black"),
-% ' #'        panel.grid=element_line(size=0.1,colour="grey",linetype = 2),
-% ' #'        panel.grid.minor=element_line(size=0.0,colour=NA,linetype = 2),
-% ' #'        strip.text=element_text(size=10),
-% ' #'        legend.text=element_text(size=10))
-% ' #' @
+
 % '
 % ' <<difference, echo=FALSE, warning=FALSE,message=FALSE, >>=
 % ' # lc$results %>%
