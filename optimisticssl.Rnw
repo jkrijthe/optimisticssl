@@ -336,7 +336,7 @@ df_gauss %>%
   scale_shape(guide="none") +
   theme_foundation() +
   scale_linetype(name="Classifier") +
-  geom_abline(slope=1,intercept=0,color="grey",size=2) +
+  geom_abline(slope=1,intercept=0,color="grey",size=2,alpha=0.5) +
   theme(rect=element_rect(fill=NA,colour=NA),
         legend.position="bottom",
         text=element_text(family="Times",size = 10,colour="black"),

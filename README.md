@@ -12,8 +12,13 @@ The goal of semi-supervised learning is to improve supervised classifiers by usi
 # How to use this code
 
 ## Installing the dependencies
+Aside from R, some dependencies require a correctly configured C++ compiler to be set up. To generate the paper, a working Latex installation is required. On Windows, you may be prompted to install Rtools. On macOS, you may need to additionally install the Fortran compiler from http://r.research.att.com/tools/. On Ubuntu, you may need:
+```{bash}
+sudo apt-get -y install libssh2-1-dev libssl-dev libcurl4-gnutls-dev texlive-latex-base texlive-fonts-recommended texlive-latex-extra texlive-publishers
+```
+
 ----
-After installing R, install the dependencies using:
+After installing R, install the required packages using:
 ```{r}
 install.packages(c("devtools","ggthemes","magrittr","dplyr",
 "tidyr","cowplot","randomForest","knitr","R.matlab"))
@@ -23,11 +28,8 @@ devtools::install_github("jkrijthe/createdatasets",
 devtools::install_github("jkrijthe/RSSL",
               ref="415c91565f310da30bb8a10b178efacd2c26473e")
 ```
-The last dependency requires a correctly configured C++ compiler to be set up. On Windows, you may be prompted to install Rtools. On macOS, you may need to additionally install the Fortran compiler from http://r.research.att.com/tools/.
 
-To generate the paper, a working Latex installation is required.
-
-## Running the experiments
+## Running the experiments (Optional)
 To rerun the experiments, from the command line, run the following commands:
 ```{bash}
 Rscript R/attraction1d.R
@@ -57,3 +59,5 @@ bibtex optimisticssl
 pdflatex optimisticssl
 pdflatex optimisticssl
 ```
+
+To reproduce the reproducibility report, change optimisticssl to reproducing-optimisticssl.
